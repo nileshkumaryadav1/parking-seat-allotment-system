@@ -1,57 +1,46 @@
 from flask import Flask, render_template, request, redirect
-import sqlite3
+from pymongo import MongoClient
+from bson import ObjectId
 
 app = Flask(__name__)
 
+# MongoDB setup
+client = MongoClient("mongodb+srv://kumarnileshnayan:hcZyByBroebDZtaf@cluster0.bbchq.mongodb.net/parking")
+db = client["parking_system"]
+slots_collection = db["slots"]
+
 # DB init
 def init_db():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS slots (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            slot_number TEXT NOT NULL,
-            is_booked INTEGER DEFAULT 0
-        )
-    ''')
-    conn.commit()
-
-    # Insert slots if empty
-    c.execute("SELECT COUNT(*) FROM slots")
-    if c.fetchone()[0] == 0:
+    if slots_collection.count_documents({}) == 0:
         for i in range(1, 11):  # 10 slots
-            c.execute("INSERT INTO slots (slot_number, is_booked) VALUES (?, ?)", (f"SLOT-{i}", 0))
-        conn.commit()
-    conn.close()
+            slots_collection.insert_one({"slot_number": f"SLOT-{i}", "is_booked": False})
 
 @app.route('/')
 def home():
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM slots")
-    slots = c.fetchall()
-    conn.close()
+    slots = list(slots_collection.find())
     return render_template('home.html', slots=slots)
 
-@app.route('/book/<int:slot_id>', methods=['GET', 'POST'])
+@app.route('/book/<slot_id>', methods=['GET', 'POST'])
 def book(slot_id):
-    if request.method == 'POST':
-        conn = sqlite3.connect('database.db')
-        c = conn.cursor()
-        c.execute("UPDATE slots SET is_booked = 1 WHERE id = ?", (slot_id,))
-        conn.commit()
-        conn.close()
-        return redirect('/')
-    return render_template('book.html', slot_id=slot_id)
+    try:
+        if request.method == 'POST':
+            slots_collection.update_one({"_id": ObjectId(slot_id)}, {"$set": {"is_booked": True}})
+            return redirect('/')
+        return render_template('book.html', slot_id=slot_id)
+    except Exception as e:
+        return f"Error booking slot: {e}"
 
-@app.route('/release/<int:slot_id>', methods=['POST'])
+@app.route('/release/<slot_id>', methods=['GET', 'POST'])
 def release(slot_id):
-    conn = sqlite3.connect('database.db')
-    c = conn.cursor()
-    c.execute("UPDATE slots SET is_booked = 0 WHERE id = ?", (slot_id,))
-    conn.commit()
-    conn.close()
-    return redirect('/')
+    try:
+        if request.method == 'POST':
+            result = slots_collection.update_one({"_id": ObjectId(slot_id)}, {"$set": {"is_booked": False}})
+            if result.matched_count == 0:
+                return render_template('release.html', slot_id=slot_id, error="Slot not found.")
+            return redirect('/')
+        return render_template('release.html', slot_id=slot_id)
+    except Exception as e:
+        return render_template('release.html', slot_id=slot_id, error="Something went wrong.")
 
 if __name__ == '__main__':
     init_db()

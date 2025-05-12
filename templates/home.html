@@ -1,20 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parking Slots</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            padding: 40px;
+            margin: 0;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 36px;
+        }
+        .slot-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .slot-item {
+            display: inline-block;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin: 15px;
+            width: 200px;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+        }
+        .slot-item:hover {
+            transform: scale(1.05);
+        }
+        .slot-item p {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        .book-button {
+            background-color: #2563eb;
+            color: white;
+        }
+        .book-button:hover {
+            background-color: #1d4ed8;
+        }
+        .release-button {
+            background-color: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+        }
+        .release-button:hover {
+            background-color: #b91c1c;
+        }
+        .booked-text {
+            font-weight: bold;
+            color: #999;
+        }
+    </style>
 </head>
 <body>
     <h1>Available Parking Slots</h1>
-    <ul>
+
+    <ul class="slot-list">
         {% for slot in slots %}
-            <li>
-                {{ slot[1] }} - 
-                {% if slot[2] == 0 %}
-                    <a href="/book/{{ slot[0] }}">Book</a>
+            <li class="slot-item">
+                <p><strong>{{ slot['slot_number'] }}</strong></p>
+                {% if not slot['is_booked'] %}
+                    <a href="/book/{{ slot['_id'] }}" class="button book-button">Book</a>
                 {% else %}
-                    <strong>Booked</strong>
-                    <form action="/release/{{ slot[0] }}" method="POST" style="display:inline;">
-                        <button type="submit">Release</button>
+                    <p class="booked-text">Booked</p>
+                    <form action="/release/{{ slot['_id'] }}" method="POST" style="display:inline;">
+                        <button type="submit" class="release-button">Release</button>
                     </form>
                 {% endif %}
             </li>
