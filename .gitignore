@@ -1,0 +1,12 @@
+# Ignore virtual environment
+venv/
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Ignore environment variables and IDE settings
+.env
+*.env
+.vscode/
+.idea/

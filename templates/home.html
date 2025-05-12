@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parking Slots</title>
+</head>
+<body>
+    <h1>Available Parking Slots</h1>
+    <ul>
+        {% for slot in slots %}
+            <li>
+                {{ slot[1] }} - 
+                {% if slot[2] == 0 %}
+                    <a href="/book/{{ slot[0] }}">Book</a>
+                {% else %}
+                    <strong>Booked</strong>
+                    <form action="/release/{{ slot[0] }}" method="POST" style="display:inline;">
+                        <button type="submit">Release</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
