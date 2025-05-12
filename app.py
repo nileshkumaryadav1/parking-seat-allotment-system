@@ -1,11 +1,20 @@
 from flask import Flask, render_template, request, redirect
 from pymongo import MongoClient
 from bson import ObjectId
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from the .env file
+load_dotenv()
+
+# Get MongoDB URI from environment variable
+MONGODB_URI = os.getenv("MONGODB_URI")
+
+# Initialize Flask app
 app = Flask(__name__)
 
 # MongoDB setup
-client = MongoClient("mongodb+srv://kumarnileshnayan:hcZyByBroebDZtaf@cluster0.bbchq.mongodb.net/parking")
+client = MongoClient(MONGODB_URI)
 db = client["parking_system"]
 slots_collection = db["slots"]
 
